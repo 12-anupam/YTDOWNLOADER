@@ -7,7 +7,9 @@ import re
 import json
 
 app = Flask(__name__)
-
+client_id = os.getenv("GOOGLE_CLIENT_ID")
+client_secret = os.getenv("GOOGLE_CLIENT_SECRET")
+redirect_uri = os.getenv("GOOGLE_REDIRECT_URI")
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 
