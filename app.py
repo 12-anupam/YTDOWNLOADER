@@ -37,11 +37,11 @@ def download_youtube_video(url, quality):
 
         # Option 2: Use cookies from browser
         # Uncomment the following line to use cookies from your browser
-         ydl_opts['cookiesfrombrowser'] = ('chrome',)  # Use 'chrome', 'firefox', or 'edge'
+         # ydl_opts['cookiesfrombrowser'] = ('chrome',)  # Use 'chrome', 'firefox', or 'edge'
 
         # Option 3: Use a proxy
         # Uncomment the following line to use a proxy
-        # ydl_opts['proxy'] = 'http://your-proxy-url:port'  # Replace with your proxy URL
+         ydl_opts['proxy'] = 'http://your-proxy-url:port'  # Replace with your proxy URL
 
         # Option 4: Use a different extractor
         # Uncomment the following line to use a different extractor
