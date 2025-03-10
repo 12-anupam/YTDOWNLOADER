@@ -1,71 +1,57 @@
-from flask import Flask, render_template, request, send_file, jsonify
-import os
+from flask import Flask, render_template, request, send_file, jsonify, redirect, session
+from google_auth_oauthlib.flow import Flow
 from yt_dlp import YoutubeDL
-import instaloader
+import os
 import logging
 import re
+import json
 
 app = Flask(__name__)
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 
+# Set a secret key for session management
+app.secret_key = os.environ.get('SECRET_KEY', 'fallback-secret-key')
+
 # Temporary folder to store downloaded files
 TEMP_FOLDER = os.path.join(os.getcwd(), "temp_downloads")
 if not os.path.exists(TEMP_FOLDER):
     os.makedirs(TEMP_FOLDER)
 
+# Google OAuth configuration
+GOOGLE_CLIENT_SECRETS_FILE = "client_secret.json"  # Path to your OAuth client secrets JSON file
+SCOPES = ["https://www.googleapis.com/auth/youtube.readonly"]
+REDIRECT_URI = "https://your-app-name.onrender.com/callback"  # Update with your Render URL
+
+# Initialize the OAuth flow
+flow = Flow.from_client_secrets_file(
+    GOOGLE_CLIENT_SECRETS_FILE,
+    scopes=SCOPES,
+    redirect_uri=REDIRECT_URI
+)
 
 # Function to sanitize file names
 def sanitize_filename(filename):
-    # Remove or replace special characters
     sanitized = re.sub(r'[\\/*?:"<>|#]', "_", filename)  # Replace invalid characters with underscores
     sanitized = sanitized.replace(" ", "_")  # Replace spaces with underscores
     return sanitized
 
-
 # Function to download YouTube video
-def download_youtube_video(url, quality):
+def download_youtube_video(url, quality, credentials):
     try:
-        if quality == "best":
-            ydl_opts = {
-                'outtmpl': os.path.join(TEMP_FOLDER, '%(title)s.%(ext)s'),
-                'format': 'bestvideo+bestaudio/best',
-                'merge_output_format': 'mp4',
-                'postprocessors': [{
-                    'key': 'FFmpegVideoConvertor',
-                    'preferedformat': 'mp4',
-                }],
-                'keepvideo': True,
-                'no_check_certificate': True,  # Bypass SSL certificate verification
-                'force_generic_extractor': True,  # Handle YouTube Shorts
-            }
-        elif quality == "1080":
-            ydl_opts = {
-                'outtmpl': os.path.join(TEMP_FOLDER, '%(title)s.%(ext)s'),
-                'format': 'bestvideo[height<=1080]+bestaudio/best',
-                'merge_output_format': 'mp4',
-                'postprocessors': [{
-                    'key': 'FFmpegVideoConvertor',
-                    'preferedformat': 'mp4',
-                }],
-                'keepvideo': True,
-                'no_check_certificate': True,  # Bypass SSL certificate verification
-                'force_generic_extractor': True,  # Handle YouTube Shorts
-            }
-        else:
-            ydl_opts = {
-                'outtmpl': os.path.join(TEMP_FOLDER, '%(title)s.%(ext)s'),
-                'format': f'bestvideo[height<={quality}]+bestaudio/best[height<={quality}]/best',
-                'merge_output_format': 'mp4',
-                'postprocessors': [{
-                    'key': 'FFmpegVideoConvertor',
-                    'preferedformat': 'mp4',
-                }],
-                'keepvideo': True,
-                'no_check_certificate': True,  # Bypass SSL certificate verification
-                'force_generic_extractor': True,  # Handle YouTube Shorts
-            }
+        ydl_opts = {
+            'outtmpl': os.path.join(TEMP_FOLDER, '%(title)s.%(ext)s'),
+            'format': 'bestvideo+bestaudio/best',
+            'merge_output_format': 'mp4',
+            'cookiefile': 'cookies.txt',  # Use cookies for authentication
+            'no_check_certificate': True,  # Bypass SSL certificate verification
+            'force_generic_extractor': True,  # Handle YouTube Shorts
+        }
+
+        # Save credentials to cookies.txt
+        with open('cookies.txt', 'w') as f:
+            json.dump(credentials, f)
 
         with YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
@@ -79,9 +65,27 @@ def download_youtube_video(url, quality):
         logging.error(f"Error downloading YouTube video: {e}")
         raise
 
+# Route for Google OAuth login
+@app.route("/login")
+def login():
+    auth_url, state = flow.authorization_url(prompt="consent")
+    session["state"] = state
+    return redirect(auth_url)
 
+# Route for Google OAuth callback
+@app.route("/callback")
+def callback():
+    flow.fetch_token(authorization_response=request.url)
+    session["credentials"] = flow.credentials.to_json()
+    return redirect("/")  # Redirect to the home page after login
+
+# Route for the home page
 @app.route("/", methods=["GET", "POST"])
 def index():
+    # Check if the user is logged in
+    if "credentials" not in session:
+        return redirect("/login")  # Redirect to login if not authenticated
+
     if request.method == "POST":
         platform = request.form.get("platform")
         url = request.form.get("url")
@@ -89,7 +93,9 @@ def index():
 
         try:
             if platform == "youtube":
-                file_path = download_youtube_video(url, quality)
+                # Get user credentials from the session
+                credentials = json.loads(session["credentials"])
+                file_path = download_youtube_video(url, quality, credentials)
             else:
                 return jsonify({"error": "Invalid platform selected."}), 400
 
@@ -109,7 +115,7 @@ def index():
 
     return render_template("index.html")
 
-
+# Route for downloading files
 @app.route("/download/<file_name>")
 def download_file(file_name):
     file_path = os.path.join(TEMP_FOLDER, file_name)
@@ -134,6 +140,5 @@ def download_file(file_name):
         logging.error(f"File not found: {file_path}")
         return "File not found.", 404
 
-
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=False)  # Debug mode is now disabled
