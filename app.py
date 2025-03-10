@@ -1,11 +1,10 @@
-from flask import Flask, render_template, request, send_file, jsonify, redirect, session
+from flask import Flask, render_template, request, send_file, jsonify
 from yt_dlp import YoutubeDL
 import os
 import logging
 import re
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'fallback-secret-key')
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
