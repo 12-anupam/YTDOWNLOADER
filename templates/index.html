@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YT Downloader</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Apply a gradient background to the body */
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #a1c4fd, #c2e9fb);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Navbar */
+        .navbar {
+            background-color: #343a40; /* Dark background for navbar */
+            width: 100%; /* Full width */
+            padding: 10px 0; /* Padding for navbar */
+        }
+
+        .navbar-brand {
+            margin: 0 auto; /* Center the navbar brand */
+            font-weight: 600;
+            color: white !important; /* Ensure text is white */
+        }
+
+        /* Hero Section */
+        .hero-section {
+            background: linear-gradient(135deg, #6a11cb, #2575fc); /* Gradient background */
+            padding: 80px 20px; /* Increased padding */
+            text-align: center;
+            color: white;
+            width: 100%; /* Full width */
+        }
+
+        .hero-section .lead {
+            color: #ffdd57; /* Yellow text color */
+            font-size: 1.5rem; /* Increased font size */
+            font-weight: 500;
+        }
+
+        /* Download Section */
+        .download-section {
+            background: rgba(255, 255, 255, 0.2); /* Glass background */
+            backdrop-filter: blur(10px); /* Glass effect */
+            padding: 80px 20px; /* Increased padding */
+            color: #333;
+            width: 100%; /* Full width */
+            border-radius: 20px; /* Rounded corners */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin: 20px 0;
+        }
+
+        .download-section h2 {
+            font-size: 2.5rem; /* Increased font size */
+            margin-bottom: 40px; /* Increased margin */
+        }
+
+        .download-section label {
+            font-size: 1.2rem; /* Increased font size */
+        }
+
+        .download-section input,
+        .download-section select {
+            font-size: 1.1rem; /* Increased font size */
+            padding: 12px; /* Increased padding */
+        }
+
+        .download-section button {
+            font-size: 1.2rem; /* Increased font size */
+            padding: 15px; /* Increased padding */
+        }
+
+        /* Features Section */
+        .features-section {
+            background: linear-gradient(135deg, #ff9a9e, #fad0c4); /* Gradient background */
+            padding: 80px 20px; /* Increased padding */
+            color: #333;
+            width: 100%; /* Full width */
+        }
+
+        .features-section h2 {
+            font-size: 2.5rem; /* Increased font size */
+            margin-bottom: 40px; /* Increased margin */
+        }
+
+        .features-section h3 {
+            font-size: 1.8rem; /* Increased font size */
+        }
+
+        .features-section p {
+            font-size: 1.2rem; /* Increased font size */
+        }
+
+        /* Footer */
+        .footer {
+            background: #343a40; /* Dark background for footer */
+            color: white;
+            padding: 40px 20px; /* Increased padding */
+            text-align: center;
+            width: 100%; /* Full width */
+        }
+
+        .footer p {
+            font-size: 1.2rem; /* Increased font size */
+        }
+
+        /* Hidden class */
+        .hidden {
+            display: none;
+        }
+
+        /* Buttons */
+        .btn-primary {
+            background-color: #2575fc;
+            border: none;
+            border-radius: 10px; /* Rounded corners */
+            font-weight: 500;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Button shadow */
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #1a5bbf;
+            transform: translateY(-2px); /* Slight lift on hover */
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15); /* Enhanced shadow on hover */
+        }
+
+        /* Form controls */
+        .form-control, .form-select {
+            border-radius: 10px; /* Rounded corners */
+            border: 1px solid #ddd;
+            font-weight: 400;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Input shadow */
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #2575fc;
+            box-shadow: 0 4px 8px rgba(37, 117, 252, 0.2); /* Enhanced shadow on focus */
+        }
+
+        /* Alerts */
+        .alert-success {
+            background-color: rgba(212, 237, 218, 0.8); /* Semi-transparent background */
+            backdrop-filter: blur(10px); /* Glass effect */
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            border-radius: 10px; /* Rounded corners */
+        }
+
+        .alert-danger {
+            background-color: rgba(248, 215, 218, 0.8); /* Semi-transparent background */
+            backdrop-filter: blur(10px); /* Glass effect */
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            border-radius: 10px; /* Rounded corners */
+        }
+
+        /* Headings */
+        h1 {
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 2.8rem; /* Increased font size */
+            font-weight: 600;
+        }
+
+        h2 {
+            font-weight: 600;
+        }
+
+        h3 {
+            font-weight: 500;
+        }
+
+        /* Labels */
+        label {
+            display: block;
+            margin: 15px 0 5px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        /* Inputs and selects */
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 10px; /* Rounded corners */
+            font-size: 14px;
+        }
+
+        /* Buttons */
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 10px; /* Rounded corners */
+            font-size: 16px;
+            cursor: none; /* Disable cursor by default */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-weight: 500;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Button shadow */
+            transition: all 0.3s ease;
+        }
+
+        button:not(:disabled) {
+            cursor: pointer; /* Enable cursor when the button is not disabled */
+        }
+
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        button:hover:not(:disabled) {
+            background-color: #218838;
+            transform: translateY(-2px); /* Slight lift on hover */
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15); /* Enhanced shadow on hover */
+        }
+
+        /* Spinner */
+        .spinner {
+            display: inline-block;
+        }
+
+        /* Messages */
+        .message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px; /* Rounded corners */
+            font-size: 14px;
+        }
+
+        .message a {
+            color: #155724;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .message a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">YT Downloader</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <h1>Download YouTube Videos Easily</h1>
+            <p class="lead">Get your favorite YouTube videos in just a few clicks.</p>
+        </div>
+    </section>
+
+    <!-- Download Section -->
+    <section id="download" class="download-section">
+        <div class="container">
+            <h2 class="text-center mb-4">Download Videos</h2>
+            <form id="download-form" method="POST" class="mt-4">
+                <div class="mb-3">
+                    <label for="platform" class="form-label">Select Platform:</label>
+                    <select id="platform" name="platform" class="form-select" required>
+                        <option value="youtube">YouTube</option>
+                        <option value="instagram">Instagram</option>
+                        <option value="twitter">Twitter (X)</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="url" class="form-label">Enter Video URL:</label>
+                    <input type="text" id="url" name="url" class="form-control" placeholder="https://..." required>
+                </div>
+                <div class="mb-3">
+                    <label for="quality" class="form-label">Select Quality:</label>
+                    <select id="quality" name="quality" class="form-select" required>
+                        <option value="best">Best Quality</option>
+                        <option value="360">360p</option>
+                        <option value="480">480p</option>
+                        <option value="720">720p</option>
+                        <option value="1080">1080p</option>
+                    </select>
+                </div>
+                <button type="submit" id="download-button" class="btn btn-primary w-100">
+                    <span id="button-text">Download</span>
+                    <span id="button-spinner" class="spinner hidden"><i class="fas fa-spinner fa-spin"></i></span>
+                </button>
+            </form>
+            <div id="message" class="mt-4 alert hidden"></div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features-section">
+        <div class="container">
+            <h2 class="text-center mb-4">Why Choose Us?</h2>
+            <div class="row">
+                <div class="col-md-4 text-center">
+                    <i class="fas fa-download fa-3x mb-3"></i>
+                    <h3>Fast Downloads</h3>
+                    <p>Download videos quickly and easily.</p>
+                </div>
+                <div class="col-md-4 text-center">
+                    <i class="fas fa-video fa-3x mb-3"></i>
+                    <h3>High Quality</h3>
+                    <p>Get videos in the best available quality.</p>
+                </div>
+                <div class="col-md-4 text-center">
+                    <i class="fas fa-shield-alt fa-3x mb-3"></i>
+                    <h3>Safe & Secure</h3>
+                    <p>Your data is always protected.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2023 YT Downloader. All rights reserved.</p>
+            <p>
+                <a href="/terms" class="text-white">Terms of Service</a> | 
+                <a href="/privacy" class="text-white">Privacy Policy</a>
+            </p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById("download-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            // Disable the button and show the spinner
+            const button = document.getElementById("download-button");
+            const buttonText = document.getElementById("button-text");
+            const spinner = document.getElementById("button-spinner");
+            const messageDiv = document.getElementById("message");
+
+            button.disabled = true;
+            buttonText.textContent = "Downloading...";
+            spinner.classList.remove("hidden");
+            messageDiv.classList.add("hidden");
+
+            const formData = new FormData(e.target);
+            const response = await fetch("/", {
+                method: "POST",
+                body: new URLSearchParams(formData),
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                const file_name = result.file_name;
+                const downloadUrl = `/download/${file_name}`;
+
+                // Prompt the user to save the file
+                const anchor = document.createElement("a");
+                anchor.href = downloadUrl;
+                anchor.download = file_name;
+                anchor.click();
+
+                messageDiv.innerHTML = `<div class="alert alert-success">Download complete! <a href="${downloadUrl}" download>Click here</a> to download the file.</div>`;
+            } else {
+                messageDiv.innerHTML = `<div class="alert alert-danger">Error: ${result.error}</div>`;
+            }
+
+            // Enable the button and hide the spinner
+            button.disabled = false;
+            buttonText.textContent = "Download";
+            spinner.classList.add("hidden");
+            messageDiv.classList.remove("hidden");
+
+            // Scroll to the message only after the download button is pressed
+            messageDiv.scrollIntoView({ behavior: "smooth" });
+        });
+    </script>
+</body>
+</html>
