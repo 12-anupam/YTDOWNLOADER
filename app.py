@@ -29,10 +29,20 @@ def download_youtube_video(url, quality):
             'merge_output_format': 'mp4',
             'no_check_certificate': True,
             'force_generic_extractor': True,
+            'extractor_args': {
+                'youtube': {
+                    'skip_download': True,  # Skip downloading restricted videos
+                },
+            },
         }
 
         with YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=True)
+            info = ydl.extract_info(url, download=False)  # Do not download, just extract info
+            if info.get('is_live') or info.get('age_limit'):
+                raise Exception("This video is restricted and cannot be downloaded.")
+
+            # Proceed with download
+            ydl.download([url])
             file_path = ydl.prepare_filename(info)
             logging.debug(f"File downloaded successfully: {file_path}")
             if not os.path.exists(file_path):
