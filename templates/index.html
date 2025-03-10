@@ -277,35 +277,42 @@
     <section id="download" class="download-section">
         <div class="container">
             <h2 class="text-center mb-4">Download Videos</h2>
-            <form id="download-form" method="POST" class="mt-4">
-                <div class="mb-3">
-                    <label for="platform" class="form-label">Select Platform:</label>
-                    <select id="platform" name="platform" class="form-select" required>
-                        <option value="youtube">YouTube</option>
-                        <option value="instagram">Instagram</option>
-                        <option value="twitter">Twitter (X)</option>
-                    </select>
+            {% if not logged_in %}
+                <div class="text-center">
+                    <p>You need to log in to download videos.</p>
+                    <a href="/login" class="btn btn-primary">Login with Google</a>
                 </div>
-                <div class="mb-3">
-                    <label for="url" class="form-label">Enter Video URL:</label>
-                    <input type="text" id="url" name="url" class="form-control" placeholder="https://..." required>
-                </div>
-                <div class="mb-3">
-                    <label for="quality" class="form-label">Select Quality:</label>
-                    <select id="quality" name="quality" class="form-select" required>
-                        <option value="best">Best Quality</option>
-                        <option value="360">360p</option>
-                        <option value="480">480p</option>
-                        <option value="720">720p</option>
-                        <option value="1080">1080p</option>
-                    </select>
-                </div>
-                <button type="submit" id="download-button" class="btn btn-primary w-100">
-                    <span id="button-text">Download</span>
-                    <span id="button-spinner" class="spinner hidden"><i class="fas fa-spinner fa-spin"></i></span>
-                </button>
-            </form>
-            <div id="message" class="mt-4 alert hidden"></div>
+            {% else %}
+                <form id="download-form" method="POST" class="mt-4">
+                    <div class="mb-3">
+                        <label for="platform" class="form-label">Select Platform:</label>
+                        <select id="platform" name="platform" class="form-select" required>
+                            <option value="youtube">YouTube</option>
+                            <option value="instagram">Instagram</option>
+                            <option value="twitter">Twitter (X)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="url" class="form-label">Enter Video URL:</label>
+                        <input type="text" id="url" name="url" class="form-control" placeholder="https://..." required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="quality" class="form-label">Select Quality:</label>
+                        <select id="quality" name="quality" class="form-select" required>
+                            <option value="best">Best Quality</option>
+                            <option value="360">360p</option>
+                            <option value="480">480p</option>
+                            <option value="720">720p</option>
+                            <option value="1080">1080p</option>
+                        </select>
+                    </div>
+                    <button type="submit" id="download-button" class="btn btn-primary w-100">
+                        <span id="button-text">Download</span>
+                        <span id="button-spinner" class="spinner hidden"><i class="fas fa-spinner fa-spin"></i></span>
+                    </button>
+                </form>
+                <div id="message" class="mt-4 alert hidden"></div>
+            {% endif %}
         </div>
     </section>
 
@@ -373,7 +380,7 @@
 
             if (result.success) {
                 const file_name = result.file_name;
-                const downloadUrl = /download/${file_name};
+                const downloadUrl = `/download/${file_name}`;
 
                 // Prompt the user to save the file
                 const anchor = document.createElement("a");
@@ -381,9 +388,9 @@
                 anchor.download = file_name;
                 anchor.click();
 
-                messageDiv.innerHTML = <div class="alert alert-success">Download complete! <a href="${downloadUrl}" download>Click here</a> to download the file.</div>;
+                messageDiv.innerHTML = `<div class="alert alert-success">Download complete! <a href="${downloadUrl}" download>Click here</a> to download the file.</div>`;
             } else {
-                messageDiv.innerHTML = <div class="alert alert-danger">Error: ${result.error}</div>;
+                messageDiv.innerHTML = `<div class="alert alert-danger">Error: ${result.error}</div>`;
             }
 
             // Enable the button and hide the spinner
