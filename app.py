@@ -22,7 +22,7 @@ if not os.path.exists(TEMP_FOLDER):
 # Google OAuth configuration
 GOOGLE_CLIENT_SECRETS_FILE = "client_secret.json"  # Path to your OAuth client secrets JSON file
 SCOPES = ["https://www.googleapis.com/auth/youtube.readonly"]
-REDIRECT_URI = "https://your-app-name.onrender.com/callback"  # Update with your Render URL
+REDIRECT_URI = "https://ytdownloader-arnd.onrender.com"  # Update with your Render URL
 
 # Initialize the OAuth flow
 flow = Flow.from_client_secrets_file(
