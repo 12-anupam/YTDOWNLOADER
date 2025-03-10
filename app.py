@@ -11,23 +11,32 @@ app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
 
 # Set a secret key for session management
-app.secret_key = os.environ.get('SECRET_KEY', 'fallback-secret-key')
+app.secret_key = os.getenv('SECRET_KEY', 'fallback-secret-key')
 
 # Temporary folder to store downloaded files
 TEMP_FOLDER = os.path.join(os.getcwd(), "temp_downloads")
 if not os.path.exists(TEMP_FOLDER):
     os.makedirs(TEMP_FOLDER)
 
-# Google OAuth configuration
-GOOGLE_CLIENT_SECRETS_FILE = "client_secret.json"  # Path to your OAuth client secrets JSON file
-SCOPES = ["https://www.googleapis.com/auth/youtube.readonly"]
-REDIRECT_URI = "https://your-app-name.onrender.com/callback"  # Update with your Render URL
+# Google OAuth configuration using environment variables
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
+REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI", "https://your-app-name.onrender.com/callback")
 
-# Initialize the OAuth flow
-flow = Flow.from_client_secrets_file(
-    GOOGLE_CLIENT_SECRETS_FILE,
-    scopes=SCOPES,
-    redirect_uri=REDIRECT_URI
+SCOPES = ["https://www.googleapis.com/auth/youtube.readonly"]
+
+# Initialize OAuth flow
+flow = Flow.from_client_config(
+    {
+        "web": {
+            "client_id": GOOGLE_CLIENT_ID,
+            "client_secret": GOOGLE_CLIENT_SECRET,
+            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+            "token_uri": "https://oauth2.googleapis.com/token",
+            "redirect_uris": [REDIRECT_URI]
+        }
+    },
+    scopes=SCOPES
 )
 
 # Function to sanitize file names
@@ -41,7 +50,7 @@ def download_youtube_video(url, quality):
     try:
         ydl_opts = {
             'outtmpl': os.path.join(TEMP_FOLDER, '%(title)s.%(ext)s'),
-            'format': 'bestvideo+bestaudio/best',
+            'format': quality if quality else 'bestvideo+bestaudio/best',
             'merge_output_format': 'mp4',
             'no_check_certificate': True,  # Bypass SSL certificate verification
             'force_generic_extractor': True,  # Handle YouTube Shorts
@@ -69,9 +78,13 @@ def login():
 # Route for Google OAuth callback
 @app.route("/callback")
 def callback():
-    flow.fetch_token(authorization_response=request.url)
-    session["credentials"] = flow.credentials.to_json()
-    return redirect("/")  # Redirect to the home page after login
+    try:
+        flow.fetch_token(authorization_response=request.url)
+        session["credentials"] = flow.credentials.to_json()
+        return redirect("/")  # Redirect to home page after login
+    except Exception as e:
+        logging.error(f"OAuth callback error: {e}")
+        return jsonify({"error": "Authentication failed"}), 500
 
 # Route for the home page
 @app.route("/", methods=["GET", "POST"])
