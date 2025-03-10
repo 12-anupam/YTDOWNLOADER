@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request, send_file, jsonify
 import os
 from yt_dlp import YoutubeDL
-import instaloader
 import logging
 import re
 
@@ -15,6 +14,8 @@ TEMP_FOLDER = os.path.join(os.getcwd(), "temp_downloads")
 if not os.path.exists(TEMP_FOLDER):
     os.makedirs(TEMP_FOLDER)
 
+# Set a secret key for session management (required for production)
+app.secret_key = os.environ.get('SECRET_KEY', 'fallback-secret-key')
 
 # Function to sanitize file names
 def sanitize_filename(filename):
@@ -23,50 +24,28 @@ def sanitize_filename(filename):
     sanitized = sanitized.replace(" ", "_")  # Replace spaces with underscores
     return sanitized
 
-
 # Function to download YouTube video
 def download_youtube_video(url, quality):
     try:
-        if quality == "best":
-            ydl_opts = {
-                'outtmpl': os.path.join(TEMP_FOLDER, '%(title)s.%(ext)s'),
-                'format': 'bestvideo+bestaudio/best',
-                'merge_output_format': 'mp4',
-                 'extractor_args': {'youtube': {'player_client': ['web']}},
-                'postprocessors': [{
-                    'key': 'FFmpegVideoConvertor',
-                    'preferedformat': 'mp4',
-                }],
-                'keepvideo': True,
-                'no_check_certificate': True,  # Bypass SSL certificate verification
-                'force_generic_extractor': True,  # Handle YouTube Shorts
-            }
-        elif quality == "1080":
-            ydl_opts = {
-                'outtmpl': os.path.join(TEMP_FOLDER, '%(title)s.%(ext)s'),
-                'format': 'bestvideo[height<=1080]+bestaudio/best',
-                'merge_output_format': 'mp4',
-                'postprocessors': [{
-                    'key': 'FFmpegVideoConvertor',
-                    'preferedformat': 'mp4',
-                }],
-                'keepvideo': True,
-                'no_check_certificate': True,  # Bypass SSL certificate verification
-                'force_generic_extractor': True,  # Handle YouTube Shorts
-            }
-        else:
-            ydl_opts = {
-                'outtmpl': os.path.join(TEMP_FOLDER, '%(title)s.%(ext)s'),
-                'format': f'bestvideo[height<={quality}]+bestaudio/best[height<={quality}]/best',
-                'merge_output_format': 'mp4',
-                'postprocessors': [{
-                    'key': 'FFmpegVideoConvertor',
-                    'preferedformat': 'mp4',
-                }],
-                'keepvideo': True,
-                'no_check_certificate': True,  # Bypass SSL certificate verification
-                'force_generic_extractor': True,  # Handle YouTube Shorts
-            }
+        ydl_opts = {
+            'outtmpl': os.path.join(TEMP_FOLDER, '%(title)s.%(ext)s'),
+            'format': 'bestvideo+bestaudio/best',
+            'merge_output_format': 'mp4',
+            'no_check_certificate': True,  # Bypass SSL certificate verification
+            'force_generic_extractor': True,  # Handle YouTube Shorts
+        }
+
+        # Option 2: Use cookies from browser
+        # Uncomment the following line to use cookies from your browser
+         ydl_opts['cookiesfrombrowser'] = ('chrome',)  # Use 'chrome', 'firefox', or 'edge'
+
+        # Option 3: Use a proxy
+        # Uncomment the following line to use a proxy
+        # ydl_opts['proxy'] = 'http://your-proxy-url:port'  # Replace with your proxy URL
+
+        # Option 4: Use a different extractor
+        # Uncomment the following line to use a different extractor
+        # ydl_opts['extractor_args'] = {'youtube': {'player_client': ['web']}}
 
         with YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
@@ -79,7 +58,6 @@ def download_youtube_video(url, quality):
     except Exception as e:
         logging.error(f"Error downloading YouTube video: {e}")
         raise
-
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -110,7 +88,6 @@ def index():
 
     return render_template("index.html")
 
-
 @app.route("/download/<file_name>")
 def download_file(file_name):
     file_path = os.path.join(TEMP_FOLDER, file_name)
@@ -135,6 +112,5 @@ def download_file(file_name):
         logging.error(f"File not found: {file_path}")
         return "File not found.", 404
 
-
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=False)  # Debug mode is now disabled
