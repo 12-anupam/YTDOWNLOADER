@@ -1,6 +1,7 @@
-from flask import Flask, render_template, request, send_file, jsonify
-import os
+from flask import Flask, render_template, request, send_file, jsonify, redirect, session
+from google_auth_oauthlib.flow import Flow
 from yt_dlp import YoutubeDL
+import os
 import logging
 import re
 
@@ -9,17 +10,28 @@ app = Flask(__name__)
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 
+# Set a secret key for session management
+app.secret_key = os.environ.get('SECRET_KEY', 'fallback-secret-key')
+
 # Temporary folder to store downloaded files
 TEMP_FOLDER = os.path.join(os.getcwd(), "temp_downloads")
 if not os.path.exists(TEMP_FOLDER):
     os.makedirs(TEMP_FOLDER)
 
-# Set a secret key for session management (required for production)
-app.secret_key = os.environ.get('SECRET_KEY', 'fallback-secret-key')
+# Google OAuth configuration
+GOOGLE_CLIENT_SECRETS_FILE = "client_secret.json"  # Path to your OAuth client secrets JSON file
+SCOPES = ["https://www.googleapis.com/auth/youtube.readonly"]
+REDIRECT_URI = "https://your-app-name.onrender.com/callback"  # Update with your Render URL
+
+# Initialize the OAuth flow
+flow = Flow.from_client_secrets_file(
+    GOOGLE_CLIENT_SECRETS_FILE,
+    scopes=SCOPES,
+    redirect_uri=REDIRECT_URI
+)
 
 # Function to sanitize file names
 def sanitize_filename(filename):
-    # Remove or replace special characters
     sanitized = re.sub(r'[\\/*?:"<>|#]', "_", filename)  # Replace invalid characters with underscores
     sanitized = sanitized.replace(" ", "_")  # Replace spaces with underscores
     return sanitized
@@ -35,19 +47,6 @@ def download_youtube_video(url, quality):
             'force_generic_extractor': True,  # Handle YouTube Shorts
         }
 
-        # Option 2: Use cookies from browser
-        # Uncomment the following line to use cookies from your browser
-         # ydl_opts['cookiesfrombrowser'] = ('chrome',)  # Use 'chrome', 'firefox', or 'edge'
-
-        # Option 3: Use a proxy
-        # Uncomment the following line to use a proxy
-         ydl_opts['proxy'] = 'http://your-proxy-url:port'  # Correct indentation
-  # Replace with your proxy URL
-
-        # Option 4: Use a different extractor
-        # Uncomment the following line to use a different extractor
-        # ydl_opts['extractor_args'] = {'youtube': {'player_client': ['web']}}
-
         with YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
             file_path = ydl.prepare_filename(info)
@@ -60,8 +59,27 @@ def download_youtube_video(url, quality):
         logging.error(f"Error downloading YouTube video: {e}")
         raise
 
+# Route for Google OAuth login
+@app.route("/login")
+def login():
+    auth_url, state = flow.authorization_url(prompt="consent")
+    session["state"] = state
+    return redirect(auth_url)
+
+# Route for Google OAuth callback
+@app.route("/callback")
+def callback():
+    flow.fetch_token(authorization_response=request.url)
+    session["credentials"] = flow.credentials.to_json()
+    return redirect("/")  # Redirect to the home page after login
+
+# Route for the home page
 @app.route("/", methods=["GET", "POST"])
 def index():
+    # Check if the user is logged in
+    if "credentials" not in session:
+        return redirect("/login")  # Redirect to login if not authenticated
+
     if request.method == "POST":
         platform = request.form.get("platform")
         url = request.form.get("url")
@@ -89,6 +107,7 @@ def index():
 
     return render_template("index.html")
 
+# Route for downloading files
 @app.route("/download/<file_name>")
 def download_file(file_name):
     file_path = os.path.join(TEMP_FOLDER, file_name)
