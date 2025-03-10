@@ -41,7 +41,7 @@ def download_youtube_video(url, quality):
 
         # Option 3: Use a proxy
         # Uncomment the following line to use a proxy
-         ydl_opts['proxy'] = 'http://your-proxy-url:port'  # Replace with your proxy URL
+         # ydl_opts['proxy'] = 'http://your-proxy-url:port'  # Replace with your proxy URL
 
         # Option 4: Use a different extractor
         # Uncomment the following line to use a different extractor
