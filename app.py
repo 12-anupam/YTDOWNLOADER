@@ -32,6 +32,7 @@ def download_youtube_video(url, quality):
                 'outtmpl': os.path.join(TEMP_FOLDER, '%(title)s.%(ext)s'),
                 'format': 'bestvideo+bestaudio/best',
                 'merge_output_format': 'mp4',
+                'cookiesfrombrowser': ('chrome',),
                 'postprocessors': [{
                     'key': 'FFmpegVideoConvertor',
                     'preferedformat': 'mp4',
